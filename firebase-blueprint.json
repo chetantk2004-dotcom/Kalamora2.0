@@ -1,0 +1,312 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "UserProfile",
+      "description": "Private writer profile and literary preferences for a Kalamora author.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Firebase Auth UID of the owner."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Author full display name (1 to 80 characters)."
+        },
+        "penName": {
+          "type": "string",
+          "description": "Optional pen name or takhallus (0 to 80 characters)."
+        },
+        "bio": {
+          "type": "string",
+          "description": "Short author bio (0 to 300 characters)."
+        },
+        "email": {
+          "type": "string",
+          "description": "Author account email (optional, PII isolated to owner)."
+        },
+        "photoUrl": {
+          "type": "string",
+          "description": "Optional profile photo URL."
+        },
+        "preferredLanguage": {
+          "type": "string",
+          "description": "Preferred writing language.",
+          "enum": ["Hindi", "English", "Hinglish", "Urdu", "Marathi", "Punjabi", "Bengali", "Other"]
+        },
+        "publicProfileEnabled": {
+          "type": "boolean",
+          "description": "Future community readiness flag for public author profile."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set on creation via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set on every update via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": ["userId", "displayName", "preferredLanguage", "publicProfileEnabled", "createdAt", "updatedAt"]
+    },
+    "Shayari": {
+      "title": "Shayari",
+      "description": "A user-authored Shayari or poetry entry with Unicode support.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Shayari title (0 to 160 characters)."
+        },
+        "content": {
+          "type": "string",
+          "description": "Shayari body text in Hindi, English, or any Unicode script (0 to 10000 characters)."
+        },
+        "category": {
+          "type": "string",
+          "description": "Shayari category.",
+          "enum": ["Love", "Sad", "Life", "Friendship", "Motivation", "Nature", "Attitude", "Other"]
+        },
+        "language": {
+          "type": "string",
+          "description": "Language of the Shayari.",
+          "enum": ["Hindi", "English", "Hinglish", "Urdu", "Marathi", "Punjabi", "Bengali", "Other"]
+        },
+        "privacyStatus": {
+          "type": "string",
+          "description": "Visibility status.",
+          "enum": ["PRIVATE", "PUBLIC"]
+        },
+        "publishStatus": {
+          "type": "string",
+          "description": "Draft or published state.",
+          "enum": ["DRAFT", "PUBLISHED"]
+        },
+        "favorite": {
+          "type": "boolean",
+          "description": "Whether the Shayari is marked as favorite."
+        },
+        "wordCount": {
+          "type": "integer",
+          "description": "Word count of the Shayari."
+        },
+        "charCount": {
+          "type": "integer",
+          "description": "Character count of the Shayari."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Author attribution printed on exported Shayari cards and PDFs."
+        },
+        "cardTheme": {
+          "type": "string",
+          "description": "Visual card theme for image export.",
+          "enum": ["PARCHMENT", "ESPRESSO", "MARIGOLD", "MIDNIGHT", "TERRACOTTA"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set on creation via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set on every update via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "content",
+        "category",
+        "language",
+        "privacyStatus",
+        "publishStatus",
+        "favorite",
+        "wordCount",
+        "charCount",
+        "authorName",
+        "cardTheme",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Book": {
+      "title": "Book",
+      "description": "A user-authored multi-chapter book manuscript.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Book title (1 to 160 characters)."
+        },
+        "authorName": {
+          "type": "string",
+          "description": "Author display or pen name (0 to 80 characters)."
+        },
+        "description": {
+          "type": "string",
+          "description": "Book synopsis or blurb (0 to 2000 characters)."
+        },
+        "coverStyle": {
+          "type": "string",
+          "description": "Cover theme preset.",
+          "enum": ["MAHOGANY", "IVORY_GOLD", "DEEP_FOREST", "MIDNIGHT_INK", "SANDSTONE"]
+        },
+        "language": {
+          "type": "string",
+          "description": "Primary language of the book.",
+          "enum": ["Hindi", "English", "Hinglish", "Urdu", "Marathi", "Punjabi", "Bengali", "Other"]
+        },
+        "genre": {
+          "type": "string",
+          "description": "Book literary genre.",
+          "enum": ["Fiction", "Poetry Collection", "Romance", "Memoir", "Drama", "Philosophy", "Short Stories", "Non-Fiction", "Other"]
+        },
+        "privacyStatus": {
+          "type": "string",
+          "description": "Visibility status.",
+          "enum": ["PRIVATE", "PUBLIC"]
+        },
+        "publishStatus": {
+          "type": "string",
+          "description": "Draft or published state.",
+          "enum": ["DRAFT", "PUBLISHED"]
+        },
+        "favorite": {
+          "type": "boolean",
+          "description": "Whether the book is starred as favorite."
+        },
+        "chapterCount": {
+          "type": "integer",
+          "description": "Denormalized count of chapters in the book."
+        },
+        "totalWordCount": {
+          "type": "integer",
+          "description": "Denormalized total words across all chapters."
+        },
+        "totalCharCount": {
+          "type": "integer",
+          "description": "Denormalized total characters across all chapters."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set on creation via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set on every update via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "authorName",
+        "description",
+        "coverStyle",
+        "language",
+        "genre",
+        "privacyStatus",
+        "publishStatus",
+        "favorite",
+        "chapterCount",
+        "totalWordCount",
+        "totalCharCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "Chapter": {
+      "title": "Chapter",
+      "description": "An independent chapter belonging to a specific user book.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Owner Firebase Auth UID."
+        },
+        "bookId": {
+          "type": "string",
+          "description": "Parent Book document ID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Chapter title (1 to 160 characters)."
+        },
+        "content": {
+          "type": "string",
+          "description": "Independent chapter text content with lightweight formatting markers (0 to 200000 characters)."
+        },
+        "orderIndex": {
+          "type": "integer",
+          "description": "Zero-based display order index within the book."
+        },
+        "textAlignment": {
+          "type": "string",
+          "description": "Preferred paragraph text alignment.",
+          "enum": ["START", "CENTER", "END", "JUSTIFY"]
+        },
+        "wordCount": {
+          "type": "integer",
+          "description": "Word count for this chapter."
+        },
+        "charCount": {
+          "type": "integer",
+          "description": "Character count for this chapter."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set on creation via FieldValue.serverTimestamp()."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp set on every update via FieldValue.serverTimestamp()."
+        }
+      },
+      "required": [
+        "userId",
+        "bookId",
+        "title",
+        "content",
+        "orderIndex",
+        "textAlignment",
+        "wordCount",
+        "charCount",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/UserProfile" },
+      "description": "Private author profile and preferences strictly isolated to the owner."
+    },
+    "/users/{userId}/shayari/{shayariId}": {
+      "schema": { "$ref": "#/entities/Shayari" },
+      "description": "Private collection of Shayari written by the authenticated user."
+    },
+    "/users/{userId}/books/{bookId}": {
+      "schema": { "$ref": "#/entities/Book" },
+      "description": "Private collection of multi-chapter books authored by the authenticated user."
+    },
+    "/users/{userId}/books/{bookId}/chapters/{chapterId}": {
+      "schema": { "$ref": "#/entities/Chapter" },
+      "description": "Independent chapters nested strictly under their parent book."
+    }
+  }
+}

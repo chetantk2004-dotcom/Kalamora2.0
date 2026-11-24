@@ -1,0 +1,47 @@
+<resources>
+    <string name="app_name">Kalamora</string>
+    <string name="app_subtitle_hi">कलम की दुनिया</string>
+    <string name="app_tagline">Every Word Has a Story.</string>
+
+    <!-- Navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_books">My Books</string>
+    <string name="nav_shayari">My Shayari</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Auth -->
+    <string name="auth_welcome_title">KALAMORA</string>
+    <string name="auth_welcome_desc">Your quiet, private writing desk for Shayari, poetry, and multi-chapter books—crafted for Hindi, English, and every script you write in.</string>
+    <string name="auth_sign_in_google">Continue with Google</string>
+    <string name="auth_privacy_note">Your manuscripts and Shayari are stored privately under your account with offline draft protection.</string>
+
+    <!-- Home -->
+    <string name="home_quick_write_shayari">Write Shayari</string>
+    <string name="home_quick_create_book">Create Book</string>
+    <string name="home_continue_writing">Continue Writing</string>
+    <string name="home_recent_books">Recently Edited Books</string>
+    <string name="home_recent_shayari">Recently Written Shayari</string>
+    <string name="home_open_library">My Library</string>
+
+    <!-- Stats -->
+    <string name="stat_books">Books</string>
+    <string name="stat_shayari">Shayari</string>
+    <string name="stat_words">Words</string>
+
+    <!-- Save status -->
+    <string name="status_saved_cloud">Saved to Cloud</string>
+    <string name="status_saving">Saving…</string>
+    <string name="status_unsaved">Unsaved changes</string>
+    <string name="status_saved_local_pending">Saved Locally · Pending Cloud Sync</string>
+    <string name="status_sync_failed_local">Cloud Sync Failed · Draft Safe Locally</string>
+
+    <!-- Common Actions -->
+    <string name="action_save">Save</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_preview">Preview</string>
+    <string name="action_export_pdf">Export PDF</string>
+    <string name="action_export_image">Shayari Card</string>
+    <string name="action_share">Share</string>
+    <string name="action_sign_out">Sign Out</string>
+</resources>

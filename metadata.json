@@ -1,0 +1,6 @@
+{
+  "name": "Kalamora",
+  "description": "A private digital writing and poetry studio for creating multi-chapter books and Shayari with Hindi and Unicode support, cloud sync, offline draft safety, and PDF/image export.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
