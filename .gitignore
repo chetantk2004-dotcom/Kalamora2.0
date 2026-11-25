@@ -16,4 +16,12 @@
 local.properties
 .env
 debug.keystore
+*.jks
+*.keystore
+*.p12
+.build-outputs/
+node_modules/
+.firebase/
 *-debug.log
+serviceAccountKey*.json
+

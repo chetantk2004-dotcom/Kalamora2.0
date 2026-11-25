@@ -1,0 +1,180 @@
+name: Build Kalamora Android APK
+
+on:
+  push:
+    branches:
+      - main
+      - master
+  workflow_dispatch:
+    inputs:
+      build_type:
+        description: "Build variant: 'release' (requires signing secrets) or 'debug' (uses repo debug.keystore.base64)"
+        required: true
+        default: "release"
+        type: choice
+        options:
+          - release
+          - debug
+
+permissions:
+  contents: read
+
+jobs:
+  build-android-apk:
+    name: Build Android APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21 (Temurin)
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "21"
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Accept Android SDK licenses
+        run: |
+          set -euo pipefail
+          SDKMANAGER="$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager"
+          if [ ! -x "$SDKMANAGER" ]; then
+            SDKMANAGER="$(find "$ANDROID_HOME" -name sdkmanager -type f | head -n 1)"
+          fi
+          yes | "$SDKMANAGER" --licenses >/dev/null 2>&1 || true
+
+      - name: Set up Gradle 9.3.1
+        uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: "9.3.1"
+
+      - name: Verify Firebase client configuration exists
+        run: |
+          set -euo pipefail
+          if [ ! -s "app/google-services.json" ]; then
+            echo "::error::Missing app/google-services.json. Firebase Auth and Firestore require this file."
+            exit 1
+          fi
+
+      - name: Run unit tests
+        run: gradle :app:testDebugUnitTest --tests com.example.KalamoraUnitTest --no-daemon
+
+      # ------------------------------------------------------------------
+      # RELEASE APK PATH (default on push and workflow_dispatch=release)
+      # ------------------------------------------------------------------
+      - name: Validate release signing secrets and decode keystore
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'release' }}
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          set -euo pipefail
+
+          missing=()
+          [ -z "$ANDROID_KEYSTORE_BASE64" ] && missing+=("ANDROID_KEYSTORE_BASE64")
+          [ -z "$ANDROID_KEYSTORE_PASSWORD" ] && missing+=("ANDROID_KEYSTORE_PASSWORD")
+          [ -z "$ANDROID_KEY_PASSWORD" ] && missing+=("ANDROID_KEY_PASSWORD")
+
+          if [ "${#missing[@]}" -gt 0 ]; then
+            echo "::error::Missing required GitHub Actions secrets for signed release APK: ${missing[*]}"
+            echo "Add ANDROID_KEYSTORE_BASE64, ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS (value: upload), and ANDROID_KEY_PASSWORD in Settings -> Secrets and variables -> Actions."
+            echo "Or run this workflow manually with build_type=debug to build a test APK right away."
+            exit 1
+          fi
+
+          if [ -n "$ANDROID_KEY_ALIAS" ] && [ "$ANDROID_KEY_ALIAS" != "upload" ]; then
+            echo "::error::ANDROID_KEY_ALIAS is set to '$ANDROID_KEY_ALIAS', but app/build.gradle.kts uses keyAlias = \"upload\". Generate your keystore with '-alias upload' and set ANDROID_KEY_ALIAS to 'upload'."
+            exit 1
+          fi
+
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | tr -d '\n\r ' | base64 --decode > "${GITHUB_WORKSPACE}/my-upload-key.jks"
+          if [ ! -s "${GITHUB_WORKSPACE}/my-upload-key.jks" ]; then
+            echo "::error::Decoded keystore file my-upload-key.jks is empty. Check ANDROID_KEYSTORE_BASE64."
+            exit 1
+          fi
+
+      - name: Build signed Release APK
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'release' }}
+        env:
+          KEYSTORE_PATH: ${{ github.workspace }}/my-upload-key.jks
+          STORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: gradle :app:assembleRelease --no-daemon --stacktrace
+
+      - name: Verify Release APK exists and is properly signed
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'release' }}
+        run: |
+          set -euo pipefail
+          APK_PATH="app/build/outputs/apk/release/app-release.apk"
+          if [ ! -s "$APK_PATH" ]; then
+            echo "::error::Expected release APK not found or empty at $APK_PATH"
+            exit 1
+          fi
+          ls -lh "$APK_PATH"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          if [ -n "$APKSIGNER" ]; then
+            "$APKSIGNER" verify --verbose "$APK_PATH"
+          fi
+
+      - name: Clean up decoded release keystore
+        if: always()
+        run: rm -f "${GITHUB_WORKSPACE}/my-upload-key.jks"
+
+      - name: Upload Release APK artifact
+        if: ${{ github.event_name != 'workflow_dispatch' || inputs.build_type == 'release' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: KALAMORA-ANDROID-APK
+          path: app/build/outputs/apk/release/app-release.apk
+          if-no-files-found: error
+          retention-days: 30
+
+      # ------------------------------------------------------------------
+      # DEBUG APK PATH (manual workflow_dispatch with build_type=debug)
+      # ------------------------------------------------------------------
+      - name: Restore debug keystore from debug.keystore.base64
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_type == 'debug' }}
+        run: |
+          set -euo pipefail
+          if [ ! -s "debug.keystore.base64" ]; then
+            echo "::error::Missing debug.keystore.base64 in repository root."
+            exit 1
+          fi
+          tr -d '\n\r ' < debug.keystore.base64 | base64 --decode > "${GITHUB_WORKSPACE}/debug.keystore"
+          if [ ! -s "${GITHUB_WORKSPACE}/debug.keystore" ]; then
+            echo "::error::Failed to decode debug.keystore."
+            exit 1
+          fi
+
+      - name: Build Debug APK
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_type == 'debug' }}
+        run: gradle :app:assembleDebug --no-daemon --stacktrace
+
+      - name: Verify Debug APK exists and is signed
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_type == 'debug' }}
+        run: |
+          set -euo pipefail
+          APK_PATH="app/build/outputs/apk/debug/app-debug.apk"
+          if [ ! -s "$APK_PATH" ]; then
+            echo "::error::Expected debug APK not found or empty at $APK_PATH"
+            exit 1
+          fi
+          ls -lh "$APK_PATH"
+          APKSIGNER="$(find "$ANDROID_HOME/build-tools" -name apksigner -type f | sort -V | tail -n 1)"
+          if [ -n "$APKSIGNER" ]; then
+            "$APKSIGNER" verify --verbose "$APK_PATH"
+          fi
+
+      - name: Upload Debug APK artifact
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.build_type == 'debug' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: KALAMORA-ANDROID-DEBUG-APK
+          path: app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 30
